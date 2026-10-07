@@ -1,3 +1,4 @@
+using Azure.AI.Extensions.OpenAI;
 using Azure.AI.Projects;
 using Azure.Identity;
 using CaseHandling.Agent;
@@ -33,6 +34,12 @@ var instructions = AgentInstructions.Load(AppContext.BaseDirectory);
 using var caseApi = new HttpClient { BaseAddress = caseApiBaseUrl };
 var toolCalls = new List<ToolCall>();
 
+using var tracerProvider = Tracing.Start(builder.Configuration);
+var includeSensitiveData = builder.Configuration.GetValue(Tracing.IncludeSensitiveDataKey, false);
+Console.WriteLine(tracerProvider is null
+    ? $"Tracing is off. Set {Tracing.ConnectionStringKey} in src/CaseHandling.Agent/appsettings.json to turn it on."
+    : $"Tracing to Application Insights (sensitive data: {includeSensitiveData}).");
+
 await using var policyServer = await PolicyServer.StartAsync();
 var policyTools = await policyServer.ListToolsAsync();
 Console.WriteLine("Policy MCP server tools:");
@@ -47,8 +54,33 @@ IList<AITool> tools =
     .. policyTools.Select(t => new LoggingAIFunction(t, Console.Out, toolCalls)),
 ];
 
-AIAgent agent = new AIProjectClient(new Uri(settings.ProjectEndpoint), new AzureCliCredential())
-    .AsAIAgent(model: settings.ModelDeployment, instructions: instructions, name: "CaseHandlingAgent", tools: tools);
+var projectClient = new AIProjectClient(new Uri(settings.ProjectEndpoint), new AzureCliCredential());
+
+if (builder.Configuration[CarrierTools.AgentNameKey] is { Length: > 0 } carrierAgentName)
+{
+    AIAgent carrierAgent = projectClient.AsAIAgent(new AgentReference(carrierAgentName));
+    var carrierTools = new CarrierTools(async (request, cancellationToken) =>
+        (await carrierAgent.RunAsync(request, cancellationToken: cancellationToken)).Text);
+    tools.Add(new LoggingAIFunction(AIFunctionFactory.Create(carrierTools.GetCarrierCompensation, name: "get_carrier_compensation"), Console.Out, toolCalls));
+    Console.WriteLine($"Foundry agent '{carrierAgentName}' is available as get_carrier_compensation.");
+}
+else
+{
+    Console.WriteLine($"No Foundry carrier agent. Set {CarrierTools.AgentNameKey} in src/CaseHandling.Agent/appsettings.json to use it.");
+}
+
+AIAgent agent = projectClient
+    .AsAIAgent(
+        model: settings.ModelDeployment,
+        instructions: instructions,
+        name: "CaseHandlingAgent",
+        tools: tools,
+        clientFactory: chatClient => chatClient.AsBuilder()
+            .UseOpenTelemetry(sourceName: Tracing.SourceName, configure: c => c.EnableSensitiveData = includeSensitiveData)
+            .Build())
+    .AsBuilder()
+    .UseOpenTelemetry(Tracing.SourceName, a => a.EnableSensitiveData = includeSensitiveData)
+    .Build();
 
 // One session for the whole run, so follow-up messages are assessed together with the first one.
 var session = await agent.CreateSessionAsync();
@@ -75,6 +107,7 @@ while (input is not null)
     {
         { Write: { } write } => $"[write] {write.Message}",
         { Assessment.CaseId: null } => "[write] No case id, so there is nothing to write.",
+        { Assessment.ProposedStatus: null } => "[write] No proposal, so there is nothing to write.",
         _ => "[write] Nothing written.",
     });
     Console.WriteLine();
@@ -119,7 +152,7 @@ static void Print(CaseAssessment assessment)
 {
     Console.WriteLine();
     Console.WriteLine($"Case:                {assessment.CaseId ?? "none"}");
-    Console.WriteLine($"Proposed status:     {assessment.ProposedStatus}");
+    Console.WriteLine($"Proposed status:     {assessment.ProposedStatus?.ToString() ?? "none"}");
     Console.WriteLine("Missing information:" + (assessment.MissingInformation.Count == 0 ? " none" : ""));
     foreach (var item in assessment.MissingInformation)
     {

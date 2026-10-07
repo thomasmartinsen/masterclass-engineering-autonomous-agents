@@ -81,6 +81,20 @@ public sealed class CaseWorkflowTests : IClassFixture<WebApplicationFactory<Prog
         Assert.Empty((await _client.GetFromJsonAsync<JsonElement[]>("/admin/changes", ct))!);
     }
 
+    [Fact]
+    public async Task Proposal_without_status_skips_approval_and_writes_nothing()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var approver = new FixedApprover(true);
+        var workflow = CaseWorkflow.Build((_, _) => Task.FromResult(Proposal() with { ProposedStatus = null }), new CaseStatusWriter(_client));
+
+        var outcome = await CaseWorkflow.RunAsync(workflow, "Assess case C-1001", approver, ct);
+
+        Assert.Null(outcome.Write);
+        Assert.Equal(0, approver.Calls);
+        Assert.Empty((await _client.GetFromJsonAsync<JsonElement[]>("/admin/changes", ct))!);
+    }
+
     [Theory]
     [InlineData(CaseStatus.Approved)]
     [InlineData(CaseStatus.Rejected)]

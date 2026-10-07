@@ -4,7 +4,8 @@ public sealed record CaseAssessment
 {
     public string? CaseId { get; init; }
 
-    public required ProposedStatus ProposedStatus { get; init; }
+    /// <summary>Null when there is not enough evidence to propose anything, for example when the case cannot be read.</summary>
+    public required ProposedStatus? ProposedStatus { get; init; }
 
     public IReadOnlyList<string> MissingInformation { get; init; } = [];
 
