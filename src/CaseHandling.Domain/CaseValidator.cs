@@ -20,6 +20,20 @@ public static class CaseValidator
             issues.Add(new(nameof(Case.Description), "A description of the incident is required."));
         }
 
+        if (@case.IncidentDate is null)
+        {
+            issues.Add(new(nameof(Case.IncidentDate), "Incident date is required."));
+        }
+        else if (@case.IncidentDate > @case.ReportedDate)
+        {
+            issues.Add(new(nameof(Case.IncidentDate), "Incident date cannot be after the reported date."));
+        }
+
+        if (@case.ClaimedAmount is null)
+        {
+            issues.Add(new(nameof(Case.ClaimedAmount), "Claimed amount is required."));
+        }
+
         if (@case.ClaimedAmount is <= 0)
         {
             issues.Add(new(nameof(Case.ClaimedAmount), "Claimed amount must be greater than zero."));

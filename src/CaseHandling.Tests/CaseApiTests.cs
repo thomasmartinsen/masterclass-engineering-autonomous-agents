@@ -43,6 +43,34 @@ public sealed class CaseApiTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
+    public async Task Validation_reports_missing_incident_date_and_claimed_amount()
+    {
+        var issues = await _client.GetFromJsonAsync<ValidationIssue[]>("/cases/C-1002/validation", _json, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(issues);
+        Assert.Contains(issues, i => i.Field == nameof(Case.IncidentDate));
+        Assert.Contains(issues, i => i.Field == nameof(Case.ClaimedAmount));
+    }
+
+    [Fact]
+    public async Task Validation_reports_incident_date_after_reported_date()
+    {
+        var issues = await _client.GetFromJsonAsync<ValidationIssue[]>("/cases/C-1007/validation", _json, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(issues);
+        Assert.Contains(issues, i => i.Field == nameof(Case.IncidentDate));
+    }
+
+    [Fact]
+    public async Task Validation_of_complete_case_returns_no_issues()
+    {
+        var issues = await _client.GetFromJsonAsync<ValidationIssue[]>("/cases/C-1001/validation", _json, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(issues);
+        Assert.Empty(issues);
+    }
+
+    [Fact]
     public async Task Disallowed_status_change_returns_409()
     {
         var response = await _client.PutAsJsonAsync(

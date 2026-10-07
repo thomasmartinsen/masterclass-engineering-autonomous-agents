@@ -38,4 +38,44 @@ public sealed class CaseValidatorTests
 
         Assert.Contains(issues, i => i.Field == nameof(Case.ClaimedAmount));
     }
+
+    [Fact]
+    public void Missing_incident_date_is_reported()
+    {
+        var issues = CaseValidator.Validate(ValidCase() with { IncidentDate = null });
+
+        Assert.Contains(issues, i => i.Field == nameof(Case.IncidentDate));
+    }
+
+    [Fact]
+    public void Incident_date_after_reported_date_is_reported()
+    {
+        var issues = CaseValidator.Validate(ValidCase() with
+        {
+            IncidentDate = new DateOnly(2026, 9, 3),
+            ReportedDate = new DateOnly(2026, 9, 2),
+        });
+
+        Assert.Contains(issues, i => i.Field == nameof(Case.IncidentDate));
+    }
+
+    [Fact]
+    public void Incident_date_on_reported_date_is_valid()
+    {
+        var issues = CaseValidator.Validate(ValidCase() with
+        {
+            IncidentDate = new DateOnly(2026, 9, 2),
+            ReportedDate = new DateOnly(2026, 9, 2),
+        });
+
+        Assert.Empty(issues);
+    }
+
+    [Fact]
+    public void Missing_claimed_amount_is_reported()
+    {
+        var issues = CaseValidator.Validate(ValidCase() with { ClaimedAmount = null });
+
+        Assert.Contains(issues, i => i.Field == nameof(Case.ClaimedAmount));
+    }
 }
