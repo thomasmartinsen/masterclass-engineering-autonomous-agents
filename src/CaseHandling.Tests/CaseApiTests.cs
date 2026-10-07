@@ -81,6 +81,22 @@ public sealed class CaseApiTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("", "Asked for invoice.")]
+    [InlineData("case-handler", " ")]
+    public async Task Note_without_author_or_text_returns_400_problem_details(string author, string text)
+    {
+        var ct = TestContext.Current.CancellationToken;
+
+        var response = await _client.PostAsJsonAsync("/cases/C-1001/notes", new { author, text }, ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
+        Assert.Equal("Author and text are required.", problem.GetProperty("title").GetString());
+        Assert.Empty((await _client.GetFromJsonAsync<JsonElement[]>("/admin/changes", ct))!);
+    }
+
     [Fact]
     public async Task Writes_are_recorded_and_cleared_by_reset()
     {

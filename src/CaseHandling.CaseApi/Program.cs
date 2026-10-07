@@ -58,7 +58,9 @@ cases.MapPost("/{id}/notes", (string id, AddNoteRequest request, CaseStore store
 
     if (string.IsNullOrWhiteSpace(request.Author) || string.IsNullOrWhiteSpace(request.Text))
     {
-        return Results.BadRequest("Author and text are required.");
+        return Results.Problem(
+            title: "Author and text are required.",
+            statusCode: StatusCodes.Status400BadRequest);
     }
 
     return Results.Ok(store.AddNote(id, request.Author, request.Text));
