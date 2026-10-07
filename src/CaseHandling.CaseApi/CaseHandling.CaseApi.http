@@ -1,0 +1,40 @@
+@baseUrl = http://localhost:5080
+
+### List all cases
+GET {{baseUrl}}/cases
+
+### List cases by status
+GET {{baseUrl}}/cases?status=Received
+
+### Get one case
+GET {{baseUrl}}/cases/C-1001
+
+### Validate a case
+GET {{baseUrl}}/cases/C-1002/validation
+
+### Validate all cases
+GET {{baseUrl}}/cases/validation
+
+### Add a note
+POST {{baseUrl}}/cases/C-1001/notes
+Content-Type: application/json
+
+{ "author": "case-handler", "text": "Asked customer for plumber invoice." }
+
+### Change status
+PUT {{baseUrl}}/cases/C-1001/status
+Content-Type: application/json
+
+{ "status": "UnderReview", "reason": "Documentation complete." }
+
+### Inspect all writes since last reset
+GET {{baseUrl}}/admin/changes
+
+### Simulate the Case API being unavailable
+POST {{baseUrl}}/admin/faults
+Content-Type: application/json
+
+{ "unavailable": true }
+
+### Reset data and faults
+POST {{baseUrl}}/admin/reset

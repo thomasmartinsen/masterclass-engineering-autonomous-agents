@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\CaseHandling.Domain\CaseHandling.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(RepoRoot)data\cases\**\*.json" LinkBase="data\cases" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

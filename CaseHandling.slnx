@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CaseHandling.Domain/CaseHandling.Domain.csproj" />
+    <Project Path="src/CaseHandling.CaseApi/CaseHandling.CaseApi.csproj" />
+    <Project Path="src/CaseHandling.PolicyMcp/CaseHandling.PolicyMcp.csproj" />
+    <Project Path="src/CaseHandling.FoundrySmokeTest/CaseHandling.FoundrySmokeTest.csproj" />
+    <Project Path="src/CaseHandling.Agent/CaseHandling.Agent.csproj" />
+    <Project Path="src/CaseHandling.Tests/CaseHandling.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+  </Folder>
+</Solution>

@@ -1,0 +1,12 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+*.trx
+
+# Local configuration with endpoints or secrets
+appsettings.Local.json
+*.local.json
+.env

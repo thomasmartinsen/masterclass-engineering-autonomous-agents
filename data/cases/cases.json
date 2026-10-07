@@ -1,0 +1,98 @@
+[
+  {
+    "id": "C-1001",
+    "customerId": "CUST-2041",
+    "category": "WaterDamage",
+    "description": "A water pipe under the kitchen sink burst on Sunday morning. Water spread across the kitchen floor and into the hallway before the main valve was closed. The laminate floor and the lower kitchen cabinets are damaged. A plumber repaired the pipe the same day.",
+    "incidentDate": "2026-09-14",
+    "reportedDate": "2026-09-16",
+    "claimedAmount": 18500,
+    "currency": "DKK",
+    "status": "Received",
+    "notes": []
+  },
+  {
+    "id": "C-1002",
+    "customerId": "CUST-3310",
+    "category": "Theft",
+    "description": "My bike was stolen.",
+    "incidentDate": null,
+    "reportedDate": "2026-09-22",
+    "claimedAmount": null,
+    "currency": "DKK",
+    "status": "Received",
+    "notes": []
+  },
+  {
+    "id": "C-1003",
+    "customerId": "CUST-1187",
+    "category": "TravelDelay",
+    "description": "Flight SK1415 from Copenhagen to Lisbon was delayed by 7 hours due to a technical fault. We had to pay for meals at the airport and lost one prepaid hotel night.",
+    "incidentDate": "2026-09-05",
+    "reportedDate": "2026-09-08",
+    "claimedAmount": 2400,
+    "currency": "DKK",
+    "status": "Received",
+    "notes": []
+  },
+  {
+    "id": "C-1004",
+    "customerId": "CUST-0912",
+    "category": "Fire",
+    "description": "A fire started in the garage during the night, most likely from an electric bicycle charger. The garage and its contents were destroyed and the fire service reported smoke damage to the adjoining utility room.",
+    "incidentDate": "2026-08-29",
+    "reportedDate": "2026-08-30",
+    "claimedAmount": 450000,
+    "currency": "DKK",
+    "status": "UnderReview",
+    "notes": [
+      {
+        "createdAt": "2026-08-31T09:12:00+02:00",
+        "author": "case-handler",
+        "text": "Fire service report received. Waiting for assessor visit."
+      }
+    ]
+  },
+  {
+    "id": "C-1005",
+    "customerId": "CUST-2788",
+    "category": "WaterDamage",
+    "description": "Discovered damp and mould behind the bathroom tiles while renovating. The leak seems to have been going on for a long time.",
+    "incidentDate": "2025-03-01",
+    "reportedDate": "2026-09-20",
+    "claimedAmount": 62000,
+    "currency": "DKK",
+    "status": "Received",
+    "notes": []
+  },
+  {
+    "id": "C-1006",
+    "customerId": "CUST-4402",
+    "category": "Other",
+    "description": "Mobile phone dropped in the harbour while boarding a ferry.",
+    "incidentDate": "2026-07-12",
+    "reportedDate": "2026-07-13",
+    "claimedAmount": 4200,
+    "currency": "DKK",
+    "status": "Approved",
+    "notes": [
+      {
+        "createdAt": "2026-07-20T14:03:00+02:00",
+        "author": "case-handler",
+        "text": "Approved according to accident cover. Paid out less deductible."
+      }
+    ]
+  },
+  {
+    "id": "C-1007",
+    "customerId": "CUST-3591",
+    "category": "Theft",
+    "description": "Laptop and headphones stolen from a parked car in Aarhus. The car window was smashed. Police report number 4100-80123-00456-26.",
+    "incidentDate": "2026-10-02",
+    "reportedDate": "2026-09-30",
+    "claimedAmount": 14999,
+    "currency": "DKK",
+    "status": "Received",
+    "notes": []
+  }
+]
