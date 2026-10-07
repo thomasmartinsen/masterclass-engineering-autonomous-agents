@@ -14,6 +14,7 @@
     <ProjectReference Include="..\CaseHandling.Domain\CaseHandling.Domain.csproj" />
     <ProjectReference Include="..\CaseHandling.CaseApi\CaseHandling.CaseApi.csproj" />
     <ProjectReference Include="..\CaseHandling.PolicyMcp\CaseHandling.PolicyMcp.csproj" />
+    <ProjectReference Include="..\CaseHandling.Agent\CaseHandling.Agent.csproj" />
   </ItemGroup>
 
   <ItemGroup>
