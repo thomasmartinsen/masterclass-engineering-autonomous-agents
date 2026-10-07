@@ -35,7 +35,12 @@ Do it the same way as `src/CaseHandling.FoundrySmokeTest/Program.cs`:
   - one `AgentSession` per conversation, created with `agent.CreateSessionAsync()`, and pass it to every run so follow-ups keep context;
   - use `agent.RunAsync<T>(input, session)` for structured output, with `T` a `sealed record` in the agent project.
 - The agent proposes a next step; it never sets `Approved` or `Rejected` (see the approval rule).
-- No tools yet unless the task asks for them.
+- Tools:
+  - Function tools are methods on a class in the agent project, registered with `AIFunctionFactory.Create(instance.Method, name: "snake_case")`. Every tool and parameter has a `[Description]`.
+  - Tools the model can call only **read**. They validate their arguments and return an `Error: ...` message instead of throwing.
+  - The policy MCP server is started over stdio by `PolicyServer`; its tools are passed to the agent as they are.
+  - Wrap every tool in `LoggingAIFunction`, so each call is printed with its arguments and result.
+- Writes happen only in the `CaseWorkflow` write step, after a human approves through the request port. Never give the agent a write tool.
 
 ## Verify
 
@@ -46,10 +51,12 @@ dotnet build CaseHandling.slnx
 dotnet run --project src/CaseHandling.Agent
 ```
 
-Try both, each in a fresh run:
+Try both, each in a fresh run, with the Case API running (`dotnet run --project src/CaseHandling.CaseApi`):
 
-1. **Complete case:** the description of `C-1001` from `data/cases/cases.json`.
-2. **Incomplete case:** `My bike was stolen.` Then, in the same run, add a date and an amount and check that the agent reassesses with everything it was told.
+1. **Complete case:** `Assess case C-1001`.
+2. **Incomplete case:** `Assess case C-1002`. It should cite `POL-THEFT-003` and ask for a police report and a frame number.
+
+For each, reject once and approve once, and check `GET /admin/changes`: no change after a rejection, exactly one after an approval. Reset with `POST /admin/reset`.
 
 If you cannot run the agent (no login or endpoint), say so; do not claim it works.
 
@@ -66,3 +73,6 @@ In addition to the C# implementation report:
 - `AsAIAgent` is an extension method on `AIProjectClient` from `Microsoft.Agents.AI.Foundry` (namespace `Azure.AI.Projects`). Its parameters are `model`, `instructions`, `name`, `description`, `tools`, and `clientFactory`. There is no separate chat client to create.
 - The program must keep reading messages in a loop with the same session. A single-run program loses the context for follow-ups.
 - Enums in a structured result need `[JsonConverter(typeof(JsonStringEnumConverter<T>))]`, so the schema and the model use names instead of numbers. Use a separate enum for the statuses the agent may propose, so `Approved` and `Rejected` are not in the schema.
+- MCP client (`ModelContextProtocol` 2.x): `McpClient.CreateAsync(new StdioClientTransport(...))`, then `ListToolsAsync()`. The returned `McpClientTool`s are `AIFunction`s and can be passed straight to `tools:`.
+- Workflows (`Microsoft.Agents.AI.Workflows`): an executor may only send or yield the types it declares. A lambda bound with `BindAsExecutor` cannot call `YieldOutputAsync`; use `new FunctionExecutor<T>(id, handler, outputTypes: [typeof(TOut)])`, or return a value so it is sent along the edges. Use conditional `AddEdge<T>(from, to, condition)` for branches.
+- Human approval is a `RequestPort.Create<TRequest, TResponse>`. The host watches `run.WatchStreamAsync()` for `RequestInfoEvent` and answers with `run.SendResponseAsync(request.CreateResponse(...))`.

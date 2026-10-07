@@ -8,11 +8,15 @@
     <PackageReference Include="Azure.Identity" />
     <PackageReference Include="Azure.AI.Projects" />
     <PackageReference Include="Microsoft.Agents.AI.Foundry" />
+    <PackageReference Include="Microsoft.Agents.AI.Workflows" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="ModelContextProtocol" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CaseHandling.Domain\CaseHandling.Domain.csproj" />
+    <!-- Builds the policy MCP server next to the agent, which starts it as a child process. -->
+    <ProjectReference Include="..\CaseHandling.PolicyMcp\CaseHandling.PolicyMcp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

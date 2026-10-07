@@ -2,6 +2,7 @@ using Azure.AI.Projects;
 using Azure.Identity;
 using CaseHandling.Agent;
 using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -22,22 +23,61 @@ catch (InvalidOperationException ex)
     return 1;
 }
 
+if (!Uri.TryCreate(builder.Configuration["CaseApi:BaseUrl"], UriKind.Absolute, out var caseApiBaseUrl))
+{
+    Console.Error.WriteLine("Missing or invalid configuration 'CaseApi:BaseUrl'. Set it in src/CaseHandling.Agent/appsettings.json.");
+    return 1;
+}
+
 var instructions = AgentInstructions.Load(AppContext.BaseDirectory);
+using var caseApi = new HttpClient { BaseAddress = caseApiBaseUrl };
+var toolCalls = new List<ToolCall>();
+
+await using var policyServer = await PolicyServer.StartAsync();
+var policyTools = await policyServer.ListToolsAsync();
+Console.WriteLine("Policy MCP server tools:");
+foreach (var tool in policyTools)
+{
+    Console.WriteLine($"  {tool.Name}: {tool.Description}");
+}
+
+IList<AITool> tools =
+[
+    new LoggingAIFunction(AIFunctionFactory.Create(new CaseTools(caseApi).GetCase, name: "get_case"), Console.Out, toolCalls),
+    .. policyTools.Select(t => new LoggingAIFunction(t, Console.Out, toolCalls)),
+];
 
 AIAgent agent = new AIProjectClient(new Uri(settings.ProjectEndpoint), new AzureCliCredential())
-    .AsAIAgent(model: settings.ModelDeployment, instructions: instructions, name: "CaseHandlingAgent");
+    .AsAIAgent(model: settings.ModelDeployment, instructions: instructions, name: "CaseHandlingAgent", tools: tools);
 
 // One session for the whole run, so follow-up messages are assessed together with the first one.
 var session = await agent.CreateSessionAsync();
 
-Console.WriteLine($"Case-handling agent ({settings.ModelDeployment}).");
-Console.WriteLine("Type or paste a case description and press Enter. Add information in follow-up messages. Type 'exit' to quit.");
+var workflow = CaseWorkflow.Build(
+    async (input, cancellationToken) =>
+    {
+        var response = await agent.RunAsync<CaseAssessment>(input, session, cancellationToken: cancellationToken);
+        Print(response.Result);
+        return response.Result;
+    },
+    new CaseStatusWriter(caseApi));
+var approver = new ConsoleApprover();
+
+Console.WriteLine();
+Console.WriteLine($"Case-handling agent ({settings.ModelDeployment}), Case API at {caseApiBaseUrl}.");
+Console.WriteLine("Type 'Assess case C-1001' or paste a case description, and press Enter. Type 'exit' to quit.");
 
 var input = args.Length > 0 ? string.Join(' ', args) : ReadMessage();
 while (input is not null)
 {
-    var response = await agent.RunAsync<CaseAssessment>(input, session);
-    Print(response.Result);
+    var outcome = await CaseWorkflow.RunAsync(workflow, input, approver);
+    Console.WriteLine(outcome switch
+    {
+        { Write: { } write } => $"[write] {write.Message}",
+        { Assessment.CaseId: null } => "[write] No case id, so there is nothing to write.",
+        _ => "[write] Nothing written.",
+    });
+    Console.WriteLine();
 
     input = ReadMessage();
 }
@@ -78,6 +118,7 @@ static string? ReadMessage()
 static void Print(CaseAssessment assessment)
 {
     Console.WriteLine();
+    Console.WriteLine($"Case:                {assessment.CaseId ?? "none"}");
     Console.WriteLine($"Proposed status:     {assessment.ProposedStatus}");
     Console.WriteLine("Missing information:" + (assessment.MissingInformation.Count == 0 ? " none" : ""));
     foreach (var item in assessment.MissingInformation)
@@ -86,6 +127,7 @@ static void Print(CaseAssessment assessment)
     }
 
     Console.WriteLine($"Customer question:   {assessment.CustomerQuestion ?? "none"}");
+    Console.WriteLine($"Policies:            {(assessment.PolicyIds.Count == 0 ? "none" : string.Join(", ", assessment.PolicyIds))}");
     Console.WriteLine($"Reasoning:           {assessment.Reasoning}");
     Console.WriteLine();
 }
