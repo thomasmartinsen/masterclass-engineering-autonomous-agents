@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../_shared/TokenUsageReporter.cs" Link="Shared/TokenUsageReporter.cs" />
+    <PackageReference Include="Microsoft.Agents.AI.Foundry" />
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Azure.AI.Projects" />
+    <PackageReference Include="Azure.Identity" />
+  </ItemGroup>
+  <ItemGroup><None Include="policies.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+</Project>

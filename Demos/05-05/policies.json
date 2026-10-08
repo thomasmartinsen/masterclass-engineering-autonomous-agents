@@ -1,0 +1,17 @@
+[
+  {
+    "id": "POL-04",
+    "title": "Laptop replacement",
+    "text": "For a customer laptop that will not start, verify the customer identity and device warranty before arranging a replacement. If a replacement is needed the next day, escalate to the equipment team for availability. Do not promise delivery until availability is confirmed."
+  },
+  {
+    "id": "POL-07",
+    "title": "Account access",
+    "text": "For portal access problems, verify the affected account and the user's identity before resetting access. Escalate if the account cannot be identified."
+  },
+  {
+    "id": "POL-11",
+    "title": "Invoice corrections",
+    "text": "For an incorrect invoice, gather the invoice number and disputed line items before referring the case to billing."
+  }
+]
